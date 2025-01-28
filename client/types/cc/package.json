@@ -1,0 +1,9 @@
+{
+    "name": "@jackmacwindows/cc-types",
+    "version": "1.0.1",
+    "description": "TypeScript type definitions for CraftOS modules.",
+    "types": "index.d.ts",
+    "files": ["./*.d.ts", "./audio", "./image", "./shell"],
+    "author": "JackMacWindows",
+    "license": "MIT"
+}
