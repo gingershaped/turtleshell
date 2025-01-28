@@ -34,22 +34,20 @@ import java.util.UUID
 import java.nio.ByteBuffer
 import java.io.IOException
 
-interface Terminal {
-    val stdin: ReceiveChannel<Byte>
-    val stdout: SendChannel<Byte>
-    val stderr: SendChannel<Byte>
-}
-
-internal val logger = KtorSimpleLogger("ConnectionManager")
+data class Challenge(val query: String, val response: Regex, val echo: Boolean = false)
 
 @OptIn(kotlin.ExperimentalUnsignedTypes::class, kotlin.ExperimentalStdlibApi::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-class ConnectionManager(val challenge: (username: String) -> InteractiveChallenge) : ShellFactory, KeyboardInteractiveAuthenticator {
+class ConnectionManager(
+    val greeting: String,
+    val instructions: String,
+    val challenges: List<Challenge>
+) : ShellFactory, KeyboardInteractiveAuthenticator {
     val connections = mutableMapOf<String, Channel<SshConnection>>()
 
     override fun createShell(session: ChannelSession): Command {
         val username = session.sessionContext.username
         val channel = connections[username]
-            ?: throw IOException("User disconnected early") 
+            ?: throw IOException("User disconnected early")
         logger.info("Creating a new shell for $username")
         return SshConnection(username).also { channel.trySend(it).getOrThrow() }
     }
@@ -60,12 +58,19 @@ class ConnectionManager(val challenge: (username: String) -> InteractiveChalleng
             return null
         }
         logger.info("New login attempt for session ${username}")
-        return challenge(username)
+        return InteractiveChallenge().apply {
+            interactionName = greeting
+            interactionInstruction = instructions
+            for (challenge in challenges) {
+                addPrompt(challenge.query, challenge.echo)
+            }
+        }
     }
 
-    override fun authenticate(session: ServerSession, username: String, responses: List<String>): Boolean {
-        return responses[0] == "yes"
-    }
+    override fun authenticate(session: ServerSession, username: String, responses: List<String>) =
+        challenges.zip(responses).all { (challenge, response) -> 
+            challenge.response.matches(response)
+        }
 
     suspend fun handleSocket(ws: DefaultWebSocketServerSession) {
         val id = "username-${(1..1000).random()}"
@@ -78,5 +83,9 @@ class ConnectionManager(val challenge: (username: String) -> InteractiveChalleng
         } finally {
             connections.remove(id)!!
         }
+    }
+
+    internal companion object {
+        val logger = KtorSimpleLogger("ConnectionManager")
     }
 }

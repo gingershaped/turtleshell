@@ -2,6 +2,7 @@ package computer.gingershaped.turtleshell
 
 import computer.gingershaped.turtleshell.SshPlugin
 import computer.gingershaped.turtleshell.connection.ConnectionManager
+import computer.gingershaped.turtleshell.connection.Challenge
 import kotlinx.coroutines.newCoroutineContext
 import io.ktor.server.application.*
 import io.ktor.server.config.ApplicationConfig
@@ -24,32 +25,40 @@ import com.sksamuel.hoplite.addResourceSource
 import java.time.Duration
 
 data class Config(
-    val http: HttpConfig,
-    val ssh: SshConfig,
+    val http: Http,
+    val ssh: Ssh,
+    val auth: Auth,
 ) {
-    data class HttpConfig(
+    data class Http(
         val host: String,
         val port: Int,
     )
-    data class SshConfig(
+    data class Ssh(
         val host: String,
         val port: Int,
         val hostKey: String,
     )
+    data class Auth(
+        val greeting: String,
+        val instructions: String,
+        val challenges: List<Challenge> = listOf(),
+    )
 }
 
-@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class, com.sksamuel.hoplite.ExperimentalHoplite::class)
 fun main() {
     val config = ConfigLoaderBuilder.default()
+        .withExplicitSealedTypes("type")
         .addResourceSource("/default.toml")
         .addResourceOrFileSource("config.toml")
         .build().loadConfigOrThrow<Config>()
+
     embeddedServer(Netty, host = config.http.host, port = config.http.port) {
-        val connectionManager = ConnectionManager { 
-            InteractiveChallenge().apply { 
-                interactionName = ":3"
-            }
-        }
+        val connectionManager = ConnectionManager(
+            config.auth.greeting,
+            config.auth.instructions,
+            config.auth.challenges
+        )
         install(SshPlugin) {
             server = SshServer.setUpDefaultServer().apply {
                 keyPairProvider = KeyPairProvider.wrap(
