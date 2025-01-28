@@ -11,7 +11,11 @@ val buildTask = tasks.register<NpxTask>("buildClient") {
     inputs.dir(project.fileTree("src"))
     inputs.dir("node_modules")
     inputs.files("tsconfig.json")
-    outputs.dir("${project.buildDir}/client")
+    outputs.dir("${project.layout.buildDirectory}/client")
+}
+
+repositories {
+    mavenCentral()
 }
 
 parent!!.kotlin.sourceSets.main {
