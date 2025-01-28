@@ -13,6 +13,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.http.content.resolveResource
+import io.ktor.server.response.respondText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.ContentType
 import org.apache.sshd.server.SshServer
@@ -26,6 +27,7 @@ import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.addResourceOrFileSource
 import com.sksamuel.hoplite.addResourceSource
 import java.time.Duration
+import java.net.URI
 
 data class Config(
     val http: Http,
@@ -35,6 +37,7 @@ data class Config(
     data class Http(
         val host: String,
         val port: Int,
+        val address: URI,
     )
     data class Ssh(
         val host: String,
@@ -55,6 +58,10 @@ fun main() {
         .addResourceSource("/default.toml")
         .addResourceOrFileSource("config.toml")
         .build().loadConfigOrThrow<Config>()
+
+    val clientLua = Unit.javaClass.getResourceAsStream("/client.lua")!!
+        .reader().use { it.readText() }
+        .replace("\$ADDRESS", config.http.address.resolve("ws").toString())
 
     embeddedServer(Netty, host = config.http.host, port = config.http.port) {
         val connectionManager = ConnectionManager(
@@ -89,8 +96,8 @@ fun main() {
             webSocket("/ws") {
                 connectionManager.handleSocket(this)
             }
-            staticResources("/client", "static", "client.lua") { 
-                contentType { ContentType("text", "plain") }
+            get("/client") {
+                call.respondText(clientLua)
             }
         }
     }.start(wait = true)

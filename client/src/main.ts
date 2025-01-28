@@ -4,7 +4,8 @@ import Buffer from "./packets/buffer";
 import { MessageType, MouseButton, Variant, deserialize } from "./packets/received";
 import { SessionTerminal, intify } from "./session";
 
-const ADDRESS = "wss://turtleshell.ginger.services/ws";
+// This is replaced by the server with a value in its config
+const ADDRESS = "$ADDRESS";
 
 interface Session {
     thread: LuaThread;
