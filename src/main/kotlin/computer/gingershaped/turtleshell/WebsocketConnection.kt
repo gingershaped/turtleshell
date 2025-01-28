@@ -44,7 +44,7 @@ const val MINOR: UByte = 0xFFu
  *   | Unused
  *   | Unused
  * MSB Unused
-*/
+ */
 const val FEATURES: UByte = 0b000000001u
 
 private suspend fun DefaultWebSocketServerSession.decodePackets() = flow {

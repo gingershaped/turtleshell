@@ -7,11 +7,11 @@ plugins {
     id("io.ktor.plugin") version "2.3.8"
 }
 
-group = "community.rto.ginger.turtleshell"
+group = "computer.gingershaped.turtleshell"
 version = "0.0.1"
 
 application {
-    mainClass.set("community.rto.ginger.turtleshell.ApplicationKt")
+    mainClass.set("computer.gingershaped.turtleshell.ApplicationKt")
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")

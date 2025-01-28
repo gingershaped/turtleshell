@@ -1,1 +1,1 @@
-rootProject.name = "community.rto.ginger.turtleshell.turtleshell"
+rootProject.name = "computer.gingershaped.turtleshell.turtleshell"
