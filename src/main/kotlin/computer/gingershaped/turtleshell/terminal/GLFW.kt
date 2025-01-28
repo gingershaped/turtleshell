@@ -1,4 +1,4 @@
-package community.rto.ginger.turtleshell.terminal
+package computer.gingershaped.turtleshell.terminal
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

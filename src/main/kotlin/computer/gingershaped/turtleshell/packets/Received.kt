@@ -1,11 +1,11 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
-package community.rto.ginger.turtleshell.packets
+package computer.gingershaped.turtleshell.packets
 
-import community.rto.ginger.turtleshell.util.CHARSET
-import community.rto.ginger.turtleshell.util.toUByteArray
-import community.rto.ginger.turtleshell.util.ColoredString
-import community.rto.ginger.turtleshell.util.hexformat
-import community.rto.ginger.turtleshell.packets.getUByte
+import computer.gingershaped.turtleshell.util.CHARSET
+import computer.gingershaped.turtleshell.util.toUByteArray
+import computer.gingershaped.turtleshell.util.ColoredString
+import computer.gingershaped.turtleshell.util.hexformat
+import computer.gingershaped.turtleshell.packets.getUByte
 import java.nio.ByteBuffer
 import java.io.IOException
 import com.github.ajalt.colormath.Color

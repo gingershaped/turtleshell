@@ -1,12 +1,12 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
-package community.rto.ginger.turtleshell.terminal
+package computer.gingershaped.turtleshell.terminal
 
 import com.github.ajalt.colormath.Color
 import com.github.ajalt.colormath.model.RGB
 import com.github.ajalt.colormath.model.Ansi16
-import community.rto.ginger.turtleshell.util.ColoredString
-import community.rto.ginger.turtleshell.util.nybbles
-import community.rto.ginger.turtleshell.terminal.EMPTY_CHAR
+import computer.gingershaped.turtleshell.util.ColoredString
+import computer.gingershaped.turtleshell.util.nybbles
+import computer.gingershaped.turtleshell.terminal.EMPTY_CHAR
 import kotlin.collections.zip
 import kotlin.collections.mutableListOf
 import kotlin.math.absoluteValue

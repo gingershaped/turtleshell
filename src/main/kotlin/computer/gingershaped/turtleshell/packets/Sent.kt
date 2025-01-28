@@ -1,9 +1,9 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
-package community.rto.ginger.turtleshell.packets
+package computer.gingershaped.turtleshell.packets
 
-import community.rto.ginger.turtleshell.util.toUByteArray
-import community.rto.ginger.turtleshell.util.ubyteFromBits
-import community.rto.ginger.turtleshell.terminal.Input
+import computer.gingershaped.turtleshell.util.toUByteArray
+import computer.gingershaped.turtleshell.util.ubyteFromBits
+import computer.gingershaped.turtleshell.terminal.Input
 import io.ktor.websocket.send
 import io.ktor.server.websocket.WebSocketServerSession
 import io.ktor.server.application.log

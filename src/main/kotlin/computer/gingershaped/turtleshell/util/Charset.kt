@@ -1,4 +1,4 @@
-package community.rto.ginger.turtleshell.util
+package computer.gingershaped.turtleshell.util
 
 import java.nio.charset.Charset
 import java.nio.charset.CharsetEncoder

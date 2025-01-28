@@ -1,11 +1,11 @@
-package community.rto.ginger.turtleshell
+package computer.gingershaped.turtleshell.connection
 
 import io.ktor.server.websocket.DefaultWebSocketServerSession
 import io.ktor.websocket.Frame
 import io.ktor.util.logging.KtorSimpleLogger
-import community.rto.ginger.turtleshell.packets.SentPacket
-import community.rto.ginger.turtleshell.packets.ReceivedPacket
-import community.rto.ginger.turtleshell.terminal.relay
+import computer.gingershaped.turtleshell.packets.SentPacket
+import computer.gingershaped.turtleshell.packets.ReceivedPacket
+import computer.gingershaped.turtleshell.session.runSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
@@ -61,7 +61,7 @@ internal suspend fun <T> SharedFlow<T?>.subscribe(block: suspend (T) -> Unit) =
     takeWhile { it != null }.filterNotNull().collect { block(it) }
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-fun DefaultWebSocketServerSession.runConnection(id: String, sshConnections: ReceiveChannel<SshConnection>) = produce<SentPacket> channel@{
+fun DefaultWebSocketServerSession.runWebsocketConnection(id: String, sshConnections: ReceiveChannel<SshConnection>) = produce<SentPacket> channel@{
     val logger = KtorSimpleLogger("WebsocketConnection[$id]")
     logger.info("Connection opened")
 
@@ -76,7 +76,7 @@ fun DefaultWebSocketServerSession.runConnection(id: String, sshConnections: Rece
                 ssh.started.join()
                 launch {
                     try {
-                        relay(
+                        runSession(
                             id,
                             sessionId.getAndIncrement().toUInt(),
                             ssh,

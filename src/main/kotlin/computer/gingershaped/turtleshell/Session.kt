@@ -1,11 +1,12 @@
-package community.rto.ginger.turtleshell.terminal
+package computer.gingershaped.turtleshell.session
 
-import community.rto.ginger.turtleshell.packets.ReceivedPacket
-import community.rto.ginger.turtleshell.packets.SentPacket
-import community.rto.ginger.turtleshell.packets.SessionPacket
-import community.rto.ginger.turtleshell.SshConnection
-import community.rto.ginger.turtleshell.util.decode
-import community.rto.ginger.turtleshell.util.send
+import computer.gingershaped.turtleshell.packets.ReceivedPacket
+import computer.gingershaped.turtleshell.packets.SentPacket
+import computer.gingershaped.turtleshell.packets.SessionPacket
+import computer.gingershaped.turtleshell.connection.SshConnection
+import computer.gingershaped.turtleshell.util.decode
+import computer.gingershaped.turtleshell.util.send
+import computer.gingershaped.turtleshell.terminal.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -32,7 +33,7 @@ import java.nio.CharBuffer
 import io.ktor.util.logging.KtorSimpleLogger
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-suspend fun CoroutineScope.relay(username: String, id: UInt, ssh: SshConnection, incoming: Flow<ReceivedPacket>, outgoing: SendChannel<SentPacket>): Nothing {
+suspend fun CoroutineScope.runSession(username: String, id: UInt, ssh: SshConnection, incoming: Flow<ReceivedPacket>, outgoing: SendChannel<SentPacket>): Nothing {
     val logger = KtorSimpleLogger("Relay[$id @ $username]")
     val term = AnsiTerminal(ssh.size.value.width, ssh.size.value.height, Ansi.Level.ANSI256) // TODO
 
@@ -47,7 +48,7 @@ suspend fun CoroutineScope.relay(username: String, id: UInt, ssh: SshConnection,
         }
         logger.info("SSH disconnected, closing")
         outgoing.send(SentPacket.EndShellSession(id))
-        this@relay.cancel()
+        this@runSession.cancel()
     }
     launch {
         ssh.stdout.send(Ansi.setModes(Ansi.Mode.ALTERNATE_BUFFER, Ansi.Mode.ALTERNATE_SCROLL, Ansi.Mode.MOUSE_TRACKING, Ansi.Mode.SGR_COORDS, enabled=true))
@@ -68,7 +69,7 @@ suspend fun CoroutineScope.relay(username: String, id: UInt, ssh: SshConnection,
                 + "$reason\r\n"
             )
             ssh.stdin.cancel()
-            this@relay.cancel()
+            this@runSession.cancel()
         }
         val builder = StringBuilder()
         incoming.collect { packet -> 

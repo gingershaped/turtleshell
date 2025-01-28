@@ -1,5 +1,5 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
-package community.rto.ginger.turtleshell.util
+package computer.gingershaped.turtleshell.util
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.ReceiveChannel

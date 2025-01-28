@@ -36,4 +36,5 @@ out/
 .vscode/
 
 ### Misc ###
-*.rsa
+*.pem
+config.toml

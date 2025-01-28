@@ -1,4 +1,4 @@
-package community.ginger.rto.turtleshell
+package computer.gingershaped.turtleshell.connection
 
 import org.apache.sshd.server.shell.ShellFactory
 import org.apache.sshd.server.auth.keyboard.KeyboardInteractiveAuthenticator
@@ -25,10 +25,11 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.CoroutineName
 import kotlin.coroutines.CoroutineContext
 import kotlin.ExperimentalStdlibApi
-import community.rto.ginger.turtleshell.runConnection
-import community.rto.ginger.turtleshell.SshConnection
-import community.rto.ginger.turtleshell.util.hexformat
-import community.rto.ginger.turtleshell.packets.ReceivedPacket
+import computer.gingershaped.turtleshell.connection.runWebsocketConnection
+import computer.gingershaped.turtleshell.connection.SshConnection
+import computer.gingershaped.turtleshell.session.runSession
+import computer.gingershaped.turtleshell.util.hexformat
+import computer.gingershaped.turtleshell.packets.ReceivedPacket
 import java.util.UUID
 import java.nio.ByteBuffer
 import java.io.IOException
@@ -42,7 +43,7 @@ interface Terminal {
 internal val logger = KtorSimpleLogger("ConnectionManager")
 
 @OptIn(kotlin.ExperimentalUnsignedTypes::class, kotlin.ExperimentalStdlibApi::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-class ConnectionManager(val authInstruction: String = "") : ShellFactory, KeyboardInteractiveAuthenticator {
+class ConnectionManager(val challenge: (username: String) -> InteractiveChallenge) : ShellFactory, KeyboardInteractiveAuthenticator {
     val connections = mutableMapOf<String, Channel<SshConnection>>()
 
     override fun createShell(session: ChannelSession): Command {
@@ -59,11 +60,7 @@ class ConnectionManager(val authInstruction: String = "") : ShellFactory, Keyboa
             return null
         }
         logger.info("New login attempt for session ${username}")
-        return InteractiveChallenge().apply {
-            interactionName = "Turtleshell SSH Relay"
-            interactionInstruction = authInstruction
-            addPrompt("Does the black moon howl? ", true)
-        }
+        return challenge(username)
     }
 
     override fun authenticate(session: ServerSession, username: String, responses: List<String>): Boolean {
@@ -75,7 +72,7 @@ class ConnectionManager(val authInstruction: String = "") : ShellFactory, Keyboa
         logger.info("Starting new connection with id $id")
         connections[id] = Channel(Channel.UNLIMITED)
         try {
-            ws.runConnection(id, connections[id]!!).consumeEach { packet ->
+            ws.runWebsocketConnection(id, connections[id]!!).consumeEach { packet ->
                 ws.send(packet.serialize().toByteArray())
             }
         } finally {

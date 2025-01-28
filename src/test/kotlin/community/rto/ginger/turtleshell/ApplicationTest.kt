@@ -1,6 +1,6 @@
-package community.rto.ginger.turtleshell
+package computer.gingershaped.turtleshell
 
-import community.rto.ginger.turtleshell.plugins.*
+import computer.gingershaped.turtleshell.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*

@@ -1,4 +1,4 @@
-package community.ginger.rto.turtleshell
+package computer.gingershaped.turtleshell
 
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.hooks.MonitoringEvent
@@ -14,28 +14,14 @@ import org.apache.sshd.server.ServerBuilder
 import org.apache.sshd.netty.NettyIoServiceFactoryFactory
 import org.apache.sshd.core.CoreModuleProperties
 import org.apache.sshd.common.PropertyResolverUtils
+import org.apache.sshd.common.keyprovider.KeyPairProvider
 
 class SshPluginConfig {
-    lateinit var connectionManager: ConnectionManager
-    var host = "0.0.0.0"
-    var port = 9999
-    var hostKey: Path = Path("./hostkey")
+    lateinit var server: SshServer
 }
 
 val SshPlugin = createApplicationPlugin(name = "SshPlugin", createConfiguration = ::SshPluginConfig) {
-    val server = SshServer.setUpDefaultServer().apply {
-        keyPairProvider = SimpleGeneratorHostKeyProvider(pluginConfig.hostKey)
-        ioServiceFactoryFactory = NettyIoServiceFactoryFactory()
-        shellFactory = pluginConfig.connectionManager
-        keyboardInteractiveAuthenticator = pluginConfig.connectionManager
-        publickeyAuthenticator = null
-        host = pluginConfig.host
-        port = pluginConfig.port
-
-        CoreModuleProperties.SERVER_IDENTIFICATION.set(this, "TURTLESHELL-SSH-RELAY")
-        CoreModuleProperties.IDLE_TIMEOUT.set(this, Duration.ofHours(1))
-        CoreModuleProperties.PASSWORD_PROMPTS.set(this, 1)
-    }
+    val server = pluginConfig.server
     application.log.info("SSH plugin loaded")
     
     on(MonitoringEvent(ApplicationStarted)) { application ->

@@ -1,6 +1,6 @@
-package community.rto.ginger.turtleshell.terminal
+package computer.gingershaped.turtleshell.terminal
 
-import community.rto.ginger.turtleshell.util.setOn
+import computer.gingershaped.turtleshell.util.setOn
 import com.github.ajalt.colormath.Color
 import kotlin.math.absoluteValue
 

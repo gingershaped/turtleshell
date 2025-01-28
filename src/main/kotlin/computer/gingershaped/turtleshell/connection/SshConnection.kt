@@ -1,4 +1,4 @@
-package community.rto.ginger.turtleshell
+package computer.gingershaped.turtleshell.connection
 
 import java.io.InputStream
 import java.io.OutputStream
