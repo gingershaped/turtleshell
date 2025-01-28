@@ -11,7 +11,10 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
+import io.ktor.server.http.content.staticResources
+import io.ktor.server.http.content.resolveResource
 import io.ktor.http.HttpHeaders
+import io.ktor.http.ContentType
 import org.apache.sshd.server.SshServer
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
 import org.apache.sshd.server.auth.keyboard.InteractiveChallenge
@@ -85,6 +88,9 @@ fun main() {
         routing {
             webSocket("/ws") {
                 connectionManager.handleSocket(this)
+            }
+            staticResources("/client", "static", "client.lua") { 
+                contentType { ContentType("text", "plain") }
             }
         }
     }.start(wait = true)

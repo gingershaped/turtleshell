@@ -10,7 +10,7 @@
     "tstl": {
         "luaTarget": "CC-5.2",
         "luaLibImport": "require-minimal",
-        "luaBundle": "build/client/main.lua",
+        "luaBundle": "build/client/static/client.lua",
         "luaBundleEntry": "src/main.ts"
     },
     "include": [
