@@ -27,7 +27,6 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.ExperimentalStdlibApi
 import computer.gingershaped.turtleshell.connection.runWebsocketConnection
 import computer.gingershaped.turtleshell.connection.SshConnection
-import computer.gingershaped.turtleshell.session.runSession
 import computer.gingershaped.turtleshell.util.hexformat
 import computer.gingershaped.turtleshell.packets.ReceivedPacket
 import java.util.UUID

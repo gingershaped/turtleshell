@@ -5,7 +5,7 @@ import io.ktor.websocket.Frame
 import io.ktor.util.logging.KtorSimpleLogger
 import computer.gingershaped.turtleshell.packets.SentPacket
 import computer.gingershaped.turtleshell.packets.ReceivedPacket
-import computer.gingershaped.turtleshell.session.runSession
+import computer.gingershaped.turtleshell.connection.runSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel

@@ -1,4 +1,4 @@
-package computer.gingershaped.turtleshell.session
+package computer.gingershaped.turtleshell.connection
 
 import computer.gingershaped.turtleshell.packets.ReceivedPacket
 import computer.gingershaped.turtleshell.packets.SentPacket
