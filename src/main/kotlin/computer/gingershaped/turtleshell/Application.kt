@@ -108,8 +108,8 @@ fun main() {
                     call.respond(HttpStatusCode.BadRequest)
                 } else {
                     socketFlow.emit(uuid to this)
+                    closeReason.await()
                 }
-                awaitCancellation()
             }
             get("/client") {
                 call.respondText(clientLua)
