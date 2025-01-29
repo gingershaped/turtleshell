@@ -31,8 +31,10 @@ data class Config(
     data class Http(
         val host: String,
         val port: Int,
-        val address: URI,
-    )
+        val address: String,
+    ) {
+        val addressUrl = Url(address)
+    }
     data class Ssh(
         val host: String,
         val port: Int,
@@ -53,13 +55,18 @@ fun main() {
         .addResourceOrFileSource("config.toml")
         .build().loadConfigOrThrow<Config>()
 
+    val socketAddress = URLBuilder(config.http.addressUrl).apply {
+        set(scheme = if (protocol.name == "http") { "ws" } else { "wss" })
+        path("ws")
+    }.buildString()
     val clientLua = Unit.javaClass.getResourceAsStream("/client.lua")!!
         .reader().use { it.readText() }
-        .replace("\$ADDRESS", config.http.address.resolve("ws").toString())
+        .replace("\$ADDRESS", socketAddress)
 
     embeddedServer(Netty, host = config.http.host, port = config.http.port) {
         val socketFlow = MutableSharedFlow<Pair<UUID, DefaultWebSocketServerSession>>()
         val connectionManager = ConnectionManager(
+            config.http.address,
             config.auth.greeting,
             config.auth.instructions,
             config.auth.challenges,

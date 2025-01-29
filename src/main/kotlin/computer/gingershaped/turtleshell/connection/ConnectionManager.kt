@@ -1,5 +1,6 @@
 package computer.gingershaped.turtleshell.connection
 
+import io.ktor.http.*
 import io.ktor.server.websocket.*
 import io.ktor.util.logging.*
 import io.ktor.websocket.*
@@ -14,6 +15,7 @@ import org.apache.sshd.server.channel.ChannelSession
 import org.apache.sshd.server.command.Command
 import org.apache.sshd.server.session.ServerSession
 import org.apache.sshd.server.shell.ShellFactory
+import java.net.URI
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
 
@@ -23,6 +25,7 @@ data class Challenge(val query: String, val response: Regex, val echo: Boolean =
 
 @OptIn(ExperimentalUnsignedTypes::class)
 class ConnectionManager(
+    private val address: String,
     private val greeting: String,
     private val instructions: String,
     private val challenges: List<Challenge>,
@@ -64,7 +67,9 @@ class ConnectionManager(
     private suspend fun startNewSession(initialConnection: SshConnection) {
         coroutineScope {
             val uuid = initialConnection.uuid
-            initialConnection.stdout.send(uuid.toString().encodeToByteArray())
+            initialConnection.stdout.send(
+                "Run `wget run ${URLBuilder(address).apply { path("/client") }} ${uuid}` to connect!\r\n".encodeToByteArray()
+            )
             val socketTask = async {
                 withTimeoutOrNull(CONNECT_TIMEOUT) {
                     sockets.first { it.first == uuid }
