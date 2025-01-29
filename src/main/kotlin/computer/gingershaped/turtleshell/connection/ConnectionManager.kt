@@ -23,7 +23,7 @@ import kotlin.text.buildString
 
 val CONNECT_TIMEOUT = 10.minutes
 
-data class Challenge(val query: String, val response: Regex, val echo: Boolean = false)
+data class Challenge(val query: String, val response: Regex, val echo: Boolean = true)
 
 @OptIn(ExperimentalUnsignedTypes::class)
 class ConnectionManager(
