@@ -1,5 +1,6 @@
 package computer.gingershaped.turtleshell.connection
 
+import computer.gingershaped.turtleshell.terminal.Ansi
 import io.ktor.http.*
 import io.ktor.server.websocket.*
 import io.ktor.util.logging.*
@@ -18,10 +19,11 @@ import org.apache.sshd.server.shell.ShellFactory
 import java.net.URI
 import java.util.*
 import kotlin.time.Duration.Companion.minutes
+import kotlin.text.buildString
 
 val CONNECT_TIMEOUT = 10.minutes
 
-data class Challenge(val query: String, val response: Regex, val echo: Boolean = false)
+data class Challenge(val query: String, val response: Regex, val echo: Boolean = true)
 
 @OptIn(ExperimentalUnsignedTypes::class)
 class ConnectionManager(
@@ -68,7 +70,13 @@ class ConnectionManager(
         coroutineScope {
             val uuid = initialConnection.uuid
             initialConnection.stdout.send(
-                "Run `wget run ${URLBuilder(address).apply { path("/client") }} ${uuid}` to connect!\r\n".encodeToByteArray()
+                buildString {
+                    append("\r\n")
+                    append(Ansi.CSI + "1m")
+                    append("Run this command on your CC computer to connect:\r\n")
+                    append(Ansi.CSI + "0m")
+                    append("    wget run ${URLBuilder(address).apply { path("/client") }} ${uuid}\r\n")
+                }.encodeToByteArray()
             )
             val socketTask = async {
                 withTimeoutOrNull(CONNECT_TIMEOUT) {
@@ -105,6 +113,7 @@ class ConnectionManager(
                 }
             } finally {
                 activeConnections.remove(uuid)!!
+                socket.close()
             }
         }
     }

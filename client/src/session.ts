@@ -16,17 +16,16 @@ export function intify(number: number): [number, number, number, number] {
     return bytes as [number, number, number, number];
 }
 
-// dubious
 const BLIT              = 0x00;
 const SCROLL            = 0x01;
-const PALETTE           = 0x02;
 const CURSOR_BLINK      = 0x03;
 const CURSOR_POS        = 0x04;
 const FILL_LINE         = 0x05;
 const FILL_SCREEN       = 0x06;
-const FLUSH             = 0x1f;
+
+const DRAW              = 0x00;
+const PALETTE           = 0x01;
 const END_SESSION       = 0x20;
-const SET_SECRET        = 0x21;
 
 const BASE_16 = "0123456789abcdef";
 
@@ -39,6 +38,7 @@ export class SessionTerminal implements ITerminal {
     private blink = true;
     private palette: [number, number, number][] = [];
     private closed = false;
+    private drawBuffer = new Buffer();
 
     constructor(readonly ws: WebSocket, readonly id: number, width: number, height: number) {
         this.width = width;
@@ -82,7 +82,9 @@ export class SessionTerminal implements ITerminal {
     }
 
     flush() {
-        this.send(this.buffer(FLUSH));
+        this.drawBuffer.flip()
+        this.send(this.buffer(DRAW).write(...this.drawBuffer.readRemaining()));
+        this.drawBuffer.reset();
     }
 
     write(thing: any): void {
@@ -90,7 +92,7 @@ export class SessionTerminal implements ITerminal {
         this.blit(text, BASE_16[this.fg].repeat(text.length), BASE_16[this.bg].repeat(text.length));
     }
     scroll(y: number): void {
-        this.send(this.buffer(SCROLL).write(...shortify(math.abs(y)), y >= 0 ? 0 : 1));
+        this.drawBuffer.write(SCROLL, ...shortify(math.abs(y)), y >= 0 ? 0 : 1);
     }
     getCursorPos(): LuaMultiReturn<[number, number]> {
         return $multi(this.cursor.x + 1, this.cursor.y + 1);
@@ -100,7 +102,7 @@ export class SessionTerminal implements ITerminal {
         y -= 1;
         this.cursor = { x: x, y: y };
         if (x >= 0 && y >= 0 && x < this.width && y <= this.width) {
-            this.send(this.buffer(CURSOR_POS).write(...shortify(x), ...shortify(y)));
+            this.drawBuffer.write(CURSOR_POS, ...shortify(x), ...shortify(y));
         }
     }
     getCursorBlink(): boolean {
@@ -108,16 +110,16 @@ export class SessionTerminal implements ITerminal {
     }
     setCursorBlink(blink: boolean) {
         this.blink = blink;
-        this.send(this.buffer(CURSOR_BLINK).write(blink ? 0x01 : 0x00));
+        this.drawBuffer.write(CURSOR_BLINK, blink ? 0x01 : 0x00);
     }
     getSize(): LuaMultiReturn<[number, number]> {
         return $multi(this.width, this.height);
     }
     clear(): void {
-        this.send(this.buffer(FILL_SCREEN).write(this.bg));
+        this.drawBuffer.write(FILL_SCREEN, this.bg);
     }
     clearLine(): void {
-        this.send(this.buffer(FILL_LINE).write(...shortify(this.cursor.y), this.bg));
+        this.drawBuffer.write(FILL_LINE, ...shortify(this.cursor.y), this.bg);
     }
     getTextColor(): number {
         return Math.pow(2, this.fg);
@@ -161,20 +163,20 @@ export class SessionTerminal implements ITerminal {
             this.cursor.x = 0;
         }
         
-        const buf = this.buffer(BLIT);
-        buf.write(...shortify(this.cursor.x), ...shortify(this.cursor.y));
+        this.drawBuffer.write(BLIT);
+        this.drawBuffer.write(...shortify(this.cursor.x), ...shortify(this.cursor.y));
 
-        buf.writeString(text);
+        this.drawBuffer.write(...intify(text.length))
+        this.drawBuffer.writeString(text);
         for (let i = 0; i < text.length; i++) {
             const fg = BASE_16.indexOf(textColor[i]);
             const bg = BASE_16.indexOf(backgroundColor[i]);
             assert(fg >= 0);
             assert(bg >= 0);
-            buf.write((fg << 4) + bg);
+            this.drawBuffer.write((fg << 4) + bg);
         }
 
         this.cursor.x += text.length;
-        this.send(buf);
     }
     setPaletteColor(index: number, r: number, g: number, b: number): void
     setPaletteColor(index: number, color: number): void

@@ -15,6 +15,7 @@ interface Session {
 
 class Host {
     readonly NOT_FORWARDED_EVENTS = ["char", "key", "key_up", "paste", "file_transfer", "mouse_click", "mouse_drag", "mouse_up", "mouse_scroll"];
+    composedAddress: string;
     ws: WebSocket;
     logger: Logger;
     relayLogger: Logger;
@@ -28,6 +29,7 @@ class Host {
         readonly sshAddress: string,
         readonly sshPort: string,
     ) {
+        this.composedAddress = socketAddress + "/" + socketId;
         this.parent = parent;
         this.logger = new Logger("host ", parent);
         this.relayLogger = new Logger("relay", parent);
@@ -49,8 +51,12 @@ class Host {
                 const env = new LuaTable();
                 env.set("_TURTLESHELL_SESSION", id);
                 env.set("_TURTLESHELL_SOCKET", this.socketId);
-                print("To open more SSH sessions, run:")
-                print(`    ssh ${this.socketId}@${this.sshAddress} -p ${this.sshPort}`)
+                term.setBackgroundColor(colors.black);
+                term.setTextColor(colors.yellow);
+                print("To open more SSH sessions, run:");
+                term.setTextColor(colors.white);
+                print(`    ssh ${this.socketId}@${this.sshAddress} -p ${this.sshPort}`);
+                print("-".repeat(term.getSize()[0]))
                 const [ok, tb] = xpcall(() => os.run(env, "/rom/programs/shell.lua"), (err) => {
                     return debug.traceback(err)
                 });
@@ -105,8 +111,8 @@ class Host {
     }
 
     private _run() {
-        this.logger.log("Connecting to relay: " + this.socketAddress);
-        const [ws, message] = http.websocket(this.socketAddress);
+        this.logger.log("Connecting to relay: " + this.composedAddress);
+        const [ws, message] = http.websocket(this.composedAddress);
         if (ws == false) {
             error(message);
         }
@@ -120,7 +126,7 @@ class Host {
 
         while (true) {
             const [event, ...args] = os.pullEventRaw();
-            if (event == "websocket_message" && args[0] == this.socketAddress) {
+            if (event == "websocket_message" && args[0] == this.composedAddress) {
                 const packet = deserialize(Buffer.wrap(args[1]));
                 if ("sessionId" in packet) {
                     if (packet.variant != 0x02 && !this.sessions.has(packet.sessionId)) {
@@ -134,7 +140,6 @@ class Host {
                 switch (packet.variant) {
                     case Variant.HELLO: {
                         error("Relay said hello twice!");
-                        break;
                     }
                     case Variant.MESSAGE: {
                         this.relayLogger.log(packet.message, packet.type);
@@ -239,13 +244,17 @@ class Host {
     run() {
         const ok = xpcall(this._run.bind(this), (err) => {
             term.redirect(this.parent);
-            this.ws.close();
+            if (this.ws != null) {
+                this.ws.close();
+            }
             this.logger.log(debug.traceback("An internal error occured"), MessageType.ERROR);
             this.logger.log(err, MessageType.ERROR);
         })
         if (ok) {
             term.redirect(this.parent);
-            this.ws.close();
+            if (this.ws != null) {
+                this.ws.close();
+            }
         }
     }
 }

@@ -1,0 +1,47 @@
+# All configuration values with defaults are optional, and may be
+# omitted to use the default value.
+
+[http]
+# The public URL of the HTTP/WebSocket server. CHANGE THIS VALUE!
+# The protocol should be either http or https. The URL may include a path
+# if Turtleshell is not being served at the root of the domain.
+address = "http://localhost"
+
+# The interface to host the HTTP/WebSocket server on. Defaults to `0.0.0.0`.
+host = "0.0.0.0"
+# The port to host the HTTP/WebSocket server on. Defaults to `29999`.
+port = 29999
+
+[ssh]
+# The domain of the SSH server. CHANGE THIS VALUE!
+# No protocol should be included. IP addresses are acceptable.
+address = "localhost"
+
+# The SSH server's host key. CHANGE THIS VALUE!
+# This should be a RSA key in PEM format, with no leading or trailing newlines.
+# Such a key may be generated with the command `openssl genrsa 1024`.
+hostKey = """-----BEGIN PRIVATE KEY-----
+...
+-----END PRIVATE KEY-----"""
+
+# The interface to host the SSH server on. Defaults to `0.0.0.0`.
+host = "0.0.0.0"
+# The port to host the SSH server on. Defaults to `9999`.
+port = 9999
+
+[auth]
+# The greeting to present during authentication.
+# Defaults to "Turtleshell SSH relay".
+greeting = "Turtleshell SSH relay"
+# The instruction string to present during authentication.
+# Defaults to an empty string.
+instructions = ""
+
+# Authentication challenges. Defaults to an empty list, so no challenges will be presented.
+[[auth.challenges]]
+# The question to ask.
+query = "Do you like cats?"
+# A regex matching allowed responses. If the response does not match, authentication will fail.
+response = "[Yy]es"
+# Whether the response should be echoed to the user's terminal as they type it. Defaults to true.
+echo = true
