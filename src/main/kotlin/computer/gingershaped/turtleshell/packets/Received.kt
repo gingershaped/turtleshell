@@ -1,15 +1,14 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 package computer.gingershaped.turtleshell.packets
 
-import computer.gingershaped.turtleshell.util.CHARSET
-import computer.gingershaped.turtleshell.util.toUByteArray
-import computer.gingershaped.turtleshell.util.ColoredString
-import computer.gingershaped.turtleshell.util.hexformat
-import computer.gingershaped.turtleshell.packets.getUByte
-import java.nio.ByteBuffer
-import java.io.IOException
 import com.github.ajalt.colormath.Color
 import com.github.ajalt.colormath.model.RGB
+import computer.gingershaped.turtleshell.util.CHARSET
+import computer.gingershaped.turtleshell.util.ColoredString
+import computer.gingershaped.turtleshell.util.hexformat
+import computer.gingershaped.turtleshell.util.toUByteArray
+import java.io.IOException
+import java.nio.ByteBuffer
 
 sealed interface SessionPacket {
     val sessionId: UInt

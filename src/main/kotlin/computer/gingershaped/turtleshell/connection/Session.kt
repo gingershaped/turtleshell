@@ -3,35 +3,21 @@ package computer.gingershaped.turtleshell.connection
 import computer.gingershaped.turtleshell.packets.ReceivedPacket
 import computer.gingershaped.turtleshell.packets.SentPacket
 import computer.gingershaped.turtleshell.packets.SessionPacket
-import computer.gingershaped.turtleshell.connection.SshConnection
+import computer.gingershaped.turtleshell.terminal.Ansi
+import computer.gingershaped.turtleshell.terminal.AnsiTerminal
+import computer.gingershaped.turtleshell.terminal.Input
+import computer.gingershaped.turtleshell.terminal.generateInputs
 import computer.gingershaped.turtleshell.util.decode
 import computer.gingershaped.turtleshell.util.send
-import computer.gingershaped.turtleshell.terminal.*
+import io.ktor.util.logging.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.channels.onSuccess
-import kotlinx.coroutines.channels.onFailure
-import kotlinx.coroutines.channels.consume
-import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.takeWhile
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.isActive
-import java.nio.charset.Charset
-import java.nio.charset.CoderResult
-import java.nio.ByteBuffer
-import java.nio.CharBuffer
-import java.util.UUID
-import io.ktor.util.logging.KtorSimpleLogger
+import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
+import java.util.*
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 suspend fun CoroutineScope.runSession(username: UUID, id: UInt, ssh: SshConnection, incoming: Flow<ReceivedPacket>, outgoing: SendChannel<SentPacket>): Nothing {

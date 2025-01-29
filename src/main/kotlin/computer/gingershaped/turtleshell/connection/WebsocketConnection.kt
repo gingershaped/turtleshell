@@ -1,38 +1,21 @@
 package computer.gingershaped.turtleshell.connection
 
-import io.ktor.server.websocket.DefaultWebSocketServerSession
-import io.ktor.websocket.Frame
-import io.ktor.util.logging.KtorSimpleLogger
-import computer.gingershaped.turtleshell.packets.SentPacket
 import computer.gingershaped.turtleshell.packets.ReceivedPacket
-import computer.gingershaped.turtleshell.connection.runSession
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.plus
+import computer.gingershaped.turtleshell.packets.SentPacket
+import io.ktor.server.websocket.*
+import io.ktor.util.logging.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.takeWhile
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.takeWhile
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.UUID
 
 const val MAJOR: UByte = 0xFFu
 const val MINOR: UByte = 0xFFu

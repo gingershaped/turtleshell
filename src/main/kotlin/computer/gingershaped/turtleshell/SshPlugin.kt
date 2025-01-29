@@ -1,20 +1,8 @@
 package computer.gingershaped.turtleshell
 
-import io.ktor.server.application.createApplicationPlugin
-import io.ktor.server.application.hooks.MonitoringEvent
-import io.ktor.server.application.ApplicationStarted
-import io.ktor.server.application.ApplicationStopped
-import io.ktor.server.application.log
-import java.nio.file.Path
-import java.time.Duration
-import kotlin.io.path.Path
+import io.ktor.server.application.*
+import io.ktor.server.application.hooks.*
 import org.apache.sshd.server.SshServer
-import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
-import org.apache.sshd.server.ServerBuilder
-import org.apache.sshd.netty.NettyIoServiceFactoryFactory
-import org.apache.sshd.core.CoreModuleProperties
-import org.apache.sshd.common.PropertyResolverUtils
-import org.apache.sshd.common.keyprovider.KeyPairProvider
 
 class SshPluginConfig {
     lateinit var server: SshServer

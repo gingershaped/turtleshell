@@ -1,13 +1,9 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 package computer.gingershaped.turtleshell.packets
 
+import computer.gingershaped.turtleshell.terminal.Input
 import computer.gingershaped.turtleshell.util.toUByteArray
 import computer.gingershaped.turtleshell.util.ubyteFromBits
-import computer.gingershaped.turtleshell.terminal.Input
-import io.ktor.websocket.send
-import io.ktor.server.websocket.WebSocketServerSession
-import io.ktor.server.application.log
-import io.ktor.util.logging.KtorSimpleLogger
 
 @OptIn(kotlin.ExperimentalUnsignedTypes::class)
 sealed class SentPacket(val variant: UByte) {

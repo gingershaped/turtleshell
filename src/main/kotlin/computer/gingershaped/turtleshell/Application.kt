@@ -1,40 +1,27 @@
 package computer.gingershaped.turtleshell
 
-import computer.gingershaped.turtleshell.SshPlugin
-import computer.gingershaped.turtleshell.connection.ConnectionManager
-import computer.gingershaped.turtleshell.connection.Challenge
-import kotlinx.coroutines.newCoroutineContext
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import io.ktor.server.application.*
-import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import io.ktor.server.plugins.cors.routing.CORS
-import io.ktor.server.routing.*
-import io.ktor.server.websocket.*
-import io.ktor.server.http.content.staticResources
-import io.ktor.server.http.content.resolveResource
-import io.ktor.server.response.respondText
-import io.ktor.server.response.respond
-import io.ktor.http.HttpHeaders
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import org.apache.sshd.server.SshServer
-import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
-import org.apache.sshd.server.auth.keyboard.InteractiveChallenge
-import org.apache.sshd.common.keyprovider.KeyPairProvider
-import org.apache.sshd.common.util.security.SecurityUtils
-import org.apache.sshd.netty.NettyIoServiceFactoryFactory
-import org.apache.sshd.core.CoreModuleProperties
 import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.addResourceOrFileSource
 import com.sksamuel.hoplite.addResourceSource
+import computer.gingershaped.turtleshell.connection.Challenge
+import computer.gingershaped.turtleshell.connection.ConnectionManager
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
 import kotlinx.coroutines.awaitCancellation
-import java.time.Duration
+import kotlinx.coroutines.flow.MutableSharedFlow
+import org.apache.sshd.common.keyprovider.KeyPairProvider
+import org.apache.sshd.common.util.security.SecurityUtils
+import org.apache.sshd.core.CoreModuleProperties
+import org.apache.sshd.netty.NettyIoServiceFactoryFactory
+import org.apache.sshd.server.SshServer
 import java.net.URI
-import java.util.UUID
+import java.time.Duration
+import java.util.*
 
 data class Config(
     val http: Http,

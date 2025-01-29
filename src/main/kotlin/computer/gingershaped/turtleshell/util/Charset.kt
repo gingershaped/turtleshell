@@ -1,13 +1,12 @@
 package computer.gingershaped.turtleshell.util
 
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
 import java.nio.charset.Charset
+import java.nio.charset.CharsetDecoder
 import java.nio.charset.CharsetEncoder
 import java.nio.charset.CoderResult
-import java.nio.charset.CharsetDecoder
 import java.nio.charset.spi.CharsetProvider
-import java.nio.CharBuffer
-import java.nio.ByteBuffer
-import kotlin.streams.asSequence
 
 private const val QUESTION_MARK: Byte = 0x3f
 

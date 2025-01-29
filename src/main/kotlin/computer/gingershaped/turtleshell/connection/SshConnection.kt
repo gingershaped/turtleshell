@@ -1,63 +1,33 @@
 package computer.gingershaped.turtleshell.connection
 
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.Closeable
-import java.util.UUID
-
 import computer.gingershaped.turtleshell.terminal.Ansi
 import computer.gingershaped.turtleshell.util.send
-import org.slf4j.LoggerFactory
-import org.apache.sshd.server.SshServer
-import org.apache.sshd.server.shell.ShellFactory
-import org.apache.sshd.server.command.AsyncCommand
-import org.apache.sshd.server.channel.ChannelSession
-import org.apache.sshd.server.Environment
-import org.apache.sshd.server.ExitCallback
-import org.apache.sshd.server.SignalListener
-import org.apache.sshd.server.Signal
-import org.apache.sshd.common.channel.Channel as SshChannel
+import io.ktor.util.logging.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.consume
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.trySendBlocking
+import kotlinx.coroutines.flow.*
+import org.apache.sshd.common.future.CloseFuture
+import org.apache.sshd.common.future.SshFutureListener
 import org.apache.sshd.common.io.IoInputStream
 import org.apache.sshd.common.io.IoOutputStream
 import org.apache.sshd.common.io.IoReadFuture
 import org.apache.sshd.common.io.IoWriteFuture
-import org.apache.sshd.common.future.SshFutureListener
-import org.apache.sshd.common.future.CloseFuture
 import org.apache.sshd.common.util.buffer.ByteArrayBuffer
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.trySendBlocking
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.onFailure
-import kotlinx.coroutines.channels.onSuccess
-import kotlinx.coroutines.channels.consume
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ticker
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.yield
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.produceIn
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.currentCoroutineContext
-import kotlin.coroutines.CoroutineContext
+import org.apache.sshd.server.Environment
+import org.apache.sshd.server.ExitCallback
+import org.apache.sshd.server.Signal
+import org.apache.sshd.server.SignalListener
+import org.apache.sshd.server.channel.ChannelSession
+import org.apache.sshd.server.command.AsyncCommand
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.*
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import io.ktor.util.logging.KtorSimpleLogger
+import org.apache.sshd.common.channel.Channel as SshChannel
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class SshConnection(val uuid: UUID, val bufferSize: Int = 8192) : AsyncCommand {

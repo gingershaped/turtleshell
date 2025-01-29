@@ -1,12 +1,5 @@
 package computer.gingershaped.turtleshell.terminal
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.Channel
-
 // Sourced from https://www.glfw.org/docs/latest/group__keys.html
 // You don't want to know how long this took
 enum class GLFW(val code: UShort) {

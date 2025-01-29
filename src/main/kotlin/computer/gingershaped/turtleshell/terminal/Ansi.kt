@@ -1,6 +1,5 @@
 package computer.gingershaped.turtleshell.terminal
 
-import computer.gingershaped.turtleshell.util.setOn
 import com.github.ajalt.colormath.Color
 import kotlin.math.absoluteValue
 

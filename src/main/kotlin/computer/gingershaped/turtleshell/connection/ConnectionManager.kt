@@ -1,23 +1,21 @@
 package computer.gingershaped.turtleshell.connection
 
-import org.apache.sshd.server.shell.ShellFactory
-import org.apache.sshd.server.auth.keyboard.KeyboardInteractiveAuthenticator
+import io.ktor.server.websocket.*
+import io.ktor.util.logging.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.first
 import org.apache.sshd.server.auth.keyboard.InteractiveChallenge
+import org.apache.sshd.server.auth.keyboard.KeyboardInteractiveAuthenticator
 import org.apache.sshd.server.channel.ChannelSession
 import org.apache.sshd.server.command.Command
 import org.apache.sshd.server.session.ServerSession
-import io.ktor.server.websocket.DefaultWebSocketServerSession
-import io.ktor.websocket.send
-import io.ktor.util.logging.KtorSimpleLogger
-import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.first
+import org.apache.sshd.server.shell.ShellFactory
+import java.util.*
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.getOrElse
-import kotlinx.coroutines.selects.select
-import java.util.UUID
 
 val CONNECT_TIMEOUT = 10.minutes
 

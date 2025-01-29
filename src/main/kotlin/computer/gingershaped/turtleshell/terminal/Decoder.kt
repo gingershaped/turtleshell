@@ -1,14 +1,11 @@
 package computer.gingershaped.turtleshell.terminal
 
 import computer.gingershaped.turtleshell.util.setOn
-import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.transformWhile
 

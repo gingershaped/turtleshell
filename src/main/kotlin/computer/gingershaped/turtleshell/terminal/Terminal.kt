@@ -3,12 +3,8 @@ package computer.gingershaped.turtleshell.terminal
 
 import com.github.ajalt.colormath.Color
 import com.github.ajalt.colormath.model.RGB
-import com.github.ajalt.colormath.model.Ansi16
 import computer.gingershaped.turtleshell.util.ColoredString
 import computer.gingershaped.turtleshell.util.nybbles
-import computer.gingershaped.turtleshell.terminal.EMPTY_CHAR
-import kotlin.collections.zip
-import kotlin.collections.mutableListOf
 import kotlin.math.absoluteValue
 
 class Palette private constructor(private val colors: MutableMap<Int, Color>) {
