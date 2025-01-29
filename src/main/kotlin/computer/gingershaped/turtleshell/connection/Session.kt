@@ -65,7 +65,6 @@ suspend fun runSession(
                 cancel()
             }
 
-            val builder = StringBuilder()
             incoming.collect { packet ->
                 if (packet is SessionPacket && packet.sessionId == id) {
                     when (packet) {
@@ -76,42 +75,41 @@ suspend fun runSession(
                             awaitCancellation()
                         }
 
-                        is ReceivedPacket.Flush -> {
-                            ssh.stdout.send(builder.toString())
-                            builder.clear()
+                        is ReceivedPacket.SetPaletteColor -> {
+                            term.setPaletteColor(packet.index, packet.color)
                         }
 
-                        else -> when (packet) {
-                            is ReceivedPacket.Blit -> {
-                                term.blit(packet.text, packet.x.toInt(), packet.y.toInt())
-                            }
-
-                            is ReceivedPacket.Scroll -> {
-                                term.scroll(packet.distance)
-                            }
-
-                            is ReceivedPacket.SetPaletteColor -> {
-                                term.setPaletteColor(packet.index, packet.color)
-                            }
-
-                            is ReceivedPacket.SetCursorVisible -> {
-                                Ansi.setModes(Ansi.Mode.CURSOR_VISIBLE, enabled = packet.visible)
-                            }
-
-                            is ReceivedPacket.SetCursorPosition -> {
-                                term.moveCursor(packet.x.toInt(), packet.y.toInt())
-                            }
-
-                            is ReceivedPacket.FillLine -> {
-                                term.fillLine(packet.line.toInt(), packet.color)
-                            }
-
-                            is ReceivedPacket.FillScreen -> {
-                                term.fillScreen(packet.color)
-                            }
-
-                            else -> throw IllegalStateException()
-                        }.let { builder.append(it) }
+                        is ReceivedPacket.Draw -> {
+                            packet.commands.map { command ->
+                                when (command) {
+                                    is ReceivedPacket.DrawCommand.Blit -> {
+                                        term.blit(command.text, command.x.toInt(), command.y.toInt())
+                                    }
+        
+                                    is ReceivedPacket.DrawCommand.Scroll -> {
+                                        term.scroll(command.distance)
+                                    }
+        
+                                    is ReceivedPacket.DrawCommand.SetCursorVisible -> {
+                                        Ansi.setModes(Ansi.Mode.CURSOR_VISIBLE, enabled = command.visible)
+                                    }
+        
+                                    is ReceivedPacket.DrawCommand.SetCursorPosition -> {
+                                        term.moveCursor(command.x.toInt(), command.y.toInt())
+                                    }
+        
+                                    is ReceivedPacket.DrawCommand.FillLine -> {
+                                        term.fillLine(command.line.toInt(), command.color)
+                                    }
+        
+                                    is ReceivedPacket.DrawCommand.FillScreen -> {
+                                        term.fillScreen(command.color)
+                                    }
+                                }
+                            }.joinToString("").let {
+                                ssh.stdout.send(it)
+                            }                            
+                        }
                     }
                 }
             }

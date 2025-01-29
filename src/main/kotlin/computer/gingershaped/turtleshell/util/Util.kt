@@ -8,6 +8,7 @@ import kotlinx.coroutines.channels.produce
 import java.nio.ByteBuffer
 import java.nio.CharBuffer
 import java.nio.charset.Charset
+import computer.gingershaped.turtleshell.packets.getUInt
 
 val CHARSET = charset("computercraft")
 
@@ -61,11 +62,9 @@ data class ColoredString(val content: CharArray, val colors: UByteArray) {
     val length = content.size
     companion object {
         fun fromBuffer(buffer: ByteBuffer) = with(buffer) {
-            val length = remaining()
-            check(length % 2 == 0)
-            val half = length / 2
-            val content = ByteArray(half).also { get(it, 0, half) }
-            val colors = ByteArray(half).also { get(it, 0, half) }
+            val length = buffer.getUInt().toInt() // this is fine
+            val content = ByteArray(length).also { get(it, 0, length) }
+            val colors = ByteArray(length).also { get(it, 0, length) }
             ColoredString(
                 CHARSET.decode(ByteBuffer.wrap(content)).array(),
                 colors.toUByteArray()

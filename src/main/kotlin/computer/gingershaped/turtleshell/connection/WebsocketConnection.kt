@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-const val MAJOR: UByte = 0x01u
+const val MAJOR: UByte = 0x02u
 const val MINOR: UByte = 0x00u
 /* Feature bits:
  * LSB unused
