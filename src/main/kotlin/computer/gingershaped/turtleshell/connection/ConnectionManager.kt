@@ -105,6 +105,7 @@ class ConnectionManager(
                 }
             } finally {
                 activeConnections.remove(uuid)!!
+                socket.close()
             }
         }
     }

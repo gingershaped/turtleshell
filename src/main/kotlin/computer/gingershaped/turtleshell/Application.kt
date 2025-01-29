@@ -105,10 +105,13 @@ fun main() {
                     UUID.fromString(call.parameters["uuid"])
                 }.getOrNull()
                 if (uuid == null) {
+                    application.log.info("Request rejected for malformed UUID ${uuid}")
                     call.respond(HttpStatusCode.BadRequest)
                 } else {
+                    application.log.info("WebSocket opened for session ${uuid}")
                     socketFlow.emit(uuid to this)
                     closeReason.await()
+                    application.log.info("WebSocket closed for session ${uuid}")
                 }
             }
             get("/client") {
