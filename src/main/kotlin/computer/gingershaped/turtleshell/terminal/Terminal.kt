@@ -272,10 +272,8 @@ class AnsiTerminal(width: Int, height: Int, private val level: Ansi.Level) {
     }.toString()
 
     fun moveCursor(x: Int, y: Int): String {
-        check(x in 0..<width)
-        check(y in 0..<height)
-        cursorX = x
-        cursorY = y
+        cursorX = x.coerceIn(0..<width)
+        cursorY = y.coerceIn(0..<height)
         return Ansi.cursorTo(x + 1, y + 1)
     }
 
