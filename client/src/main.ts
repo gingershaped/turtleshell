@@ -6,9 +6,6 @@ import { SessionTerminal, intify } from "./session";
 
 declare const arg: string[];
 
-// This is replaced by the server with a value in its config
-const ADDRESS = "$ADDRESS";
-
 interface Session {
     thread: LuaThread;
     filter: string | undefined;
@@ -24,7 +21,13 @@ class Host {
     sessions: Map<number, Session> = new Map();
     parent: ITerminal;
 
-    constructor(parent: ITerminal, readonly address: string) {
+    constructor(
+        parent: ITerminal,
+        readonly socketAddress: string,
+        readonly socketId: string,
+        readonly sshAddress: string,
+        readonly sshPort: string,
+    ) {
         this.parent = parent;
         this.logger = new Logger("host ", parent);
         this.relayLogger = new Logger("relay", parent);
@@ -45,6 +48,9 @@ class Host {
             thread: coroutine.create(function() {
                 const env = new LuaTable();
                 env.set("_TURTLESHELL_SESSION", id);
+                env.set("_TURTLESHELL_SOCKET", this.socketId);
+                print("To open more SSH sessions, run:")
+                print(`    ssh ${this.socketId}@${this.sshAddress} -p ${this.sshPort}`)
                 const [ok, tb] = xpcall(() => os.run(env, "/rom/programs/shell.lua"), (err) => {
                     return debug.traceback(err)
                 });
@@ -99,8 +105,8 @@ class Host {
     }
 
     private _run() {
-        this.logger.log("Connecting to relay: " + this.address);
-        const [ws, message] = http.websocket(this.address);
+        this.logger.log("Connecting to relay: " + this.socketAddress);
+        const [ws, message] = http.websocket(this.socketAddress);
         if (ws == false) {
             error(message);
         }
@@ -114,7 +120,7 @@ class Host {
 
         while (true) {
             const [event, ...args] = os.pullEventRaw();
-            if (event == "websocket_message" && args[0] == this.address) {
+            if (event == "websocket_message" && args[0] == this.socketAddress) {
                 const packet = deserialize(Buffer.wrap(args[1]));
                 if ("sessionId" in packet) {
                     if (packet.variant != 0x02 && !this.sessions.has(packet.sessionId)) {
@@ -213,7 +219,7 @@ class Host {
                         break;
                     }
                 }
-            } else if (event == "websocket_closed" && args[0] == this.address) {
+            } else if (event == "websocket_closed" && args[0] == this.socketAddress) {
                 this.logger.log("Websocket was closed, shutting down")
                 this.killAll()
                 break;
@@ -244,4 +250,17 @@ class Host {
     }
 }
 
-new Host(term.current(), ADDRESS + "/" + arg[arg.length - 1]).run()
+// These are replaced by the server with values in its config
+// The base WebSocket URL, which the ID will be concatenated to
+const socketAddress = "$SOCKETADDRESS";
+// The address and port of the SSH server
+const sshAddress = "$SSHADDRESS"
+const sshPort = "$SSHPORT"
+
+new Host(
+    term.current(),
+    socketAddress,
+    arg[arg.length - 1],
+    sshAddress,
+    sshPort,
+).run()

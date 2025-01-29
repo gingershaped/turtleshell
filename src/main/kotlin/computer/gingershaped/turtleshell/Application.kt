@@ -39,6 +39,7 @@ data class Config(
         val host: String,
         val port: Int,
         val hostKey: String,
+        val address: String,
     )
     data class Auth(
         val greeting: String,
@@ -61,7 +62,9 @@ fun main() {
     }.buildString()
     val clientLua = Unit.javaClass.getResourceAsStream("/client.lua")!!
         .reader().use { it.readText() }
-        .replace("\$ADDRESS", socketAddress)
+        .replace("\$SOCKETADDRESS", socketAddress)
+        .replace("\$SSHADDRESS", config.ssh.address)
+        .replace("\$SSHPORT", config.ssh.port.toString())
 
     embeddedServer(Netty, host = config.http.host, port = config.http.port) {
         val socketFlow = MutableSharedFlow<Pair<UUID, DefaultWebSocketServerSession>>()
