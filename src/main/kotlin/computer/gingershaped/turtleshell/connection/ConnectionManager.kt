@@ -6,32 +6,20 @@ import org.apache.sshd.server.auth.keyboard.InteractiveChallenge
 import org.apache.sshd.server.channel.ChannelSession
 import org.apache.sshd.server.command.Command
 import org.apache.sshd.server.session.ServerSession
-import io.ktor.server.websocket.WebSocketServerSession
 import io.ktor.server.websocket.DefaultWebSocketServerSession
-import io.ktor.websocket.Frame
 import io.ktor.websocket.send
-import io.ktor.websocket.close
-import io.ktor.websocket.DefaultWebSocketSession
 import io.ktor.util.logging.KtorSimpleLogger
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.CoroutineName
-import kotlin.coroutines.CoroutineContext
-import kotlin.ExperimentalStdlibApi
-import computer.gingershaped.turtleshell.connection.runWebsocketConnection
-import computer.gingershaped.turtleshell.connection.SshConnection
-import computer.gingershaped.turtleshell.util.hexformat
-import computer.gingershaped.turtleshell.packets.ReceivedPacket
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.first
+import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.getOrElse
+import kotlinx.coroutines.selects.select
 import java.util.UUID
-import java.nio.ByteBuffer
-import java.io.IOException
+
+val CONNECT_TIMEOUT = 10.minutes
 
 data class Challenge(val query: String, val response: Regex, val echo: Boolean = false)
 
@@ -39,24 +27,28 @@ data class Challenge(val query: String, val response: Regex, val echo: Boolean =
 class ConnectionManager(
     val greeting: String,
     val instructions: String,
-    val challenges: List<Challenge>
+    val challenges: List<Challenge>,
+    val scope: CoroutineScope,
+    val sockets: SharedFlow<Pair<UUID, DefaultWebSocketServerSession>>,
 ) : ShellFactory, KeyboardInteractiveAuthenticator {
-    val connections = mutableMapOf<String, Channel<SshConnection>>()
+    val activeConnections = mutableMapOf<UUID, Channel<SshConnection>>()
 
     override fun createShell(session: ChannelSession): Command {
-        val username = session.sessionContext.username
-        val channel = connections[username]
-            ?: throw IOException("User disconnected early")
-        logger.info("Creating a new shell for $username")
-        return SshConnection(username).also { channel.trySend(it).getOrThrow() }
+        val uuid = runCatching { UUID.fromString(session.sessionContext.username) }.getOrNull()
+        if (uuid != null && uuid in activeConnections) {
+            logger.info("Creating a new shell for session $uuid")
+            return SshConnection(uuid).also {
+                activeConnections[uuid]!!.trySend(it).getOrThrow()
+            }
+        } else {
+            val newUuid = UUID.randomUUID()
+            logger.info("Creating a new session $newUuid")
+            return SshConnection(newUuid).also { scope.launch { startNewSession(it) } }
+        }
     }
 
     override fun generateChallenge(session: ServerSession, username: String, lang: String, subMethods: String): InteractiveChallenge? {
-        if (!connections.containsKey(username)) {
-            logger.info("Login attempted with invalid username ${username}")
-            return null
-        }
-        logger.info("New login attempt for session ${username}")
+        logger.info("New login attempt for session $username")
         return InteractiveChallenge().apply {
             interactionName = greeting
             interactionInstruction = instructions
@@ -71,16 +63,46 @@ class ConnectionManager(
             challenge.response.matches(response)
         }
 
-    suspend fun handleSocket(ws: DefaultWebSocketServerSession) {
-        val id = "username-${(1..1000).random()}"
-        logger.info("Starting new connection with id $id")
-        connections[id] = Channel(Channel.UNLIMITED)
-        try {
-            ws.runWebsocketConnection(id, connections[id]!!).consumeEach { packet ->
-                ws.send(packet.serialize().toByteArray())
+    private suspend fun startNewSession(initialConnection: SshConnection) {
+        coroutineScope {
+            val uuid = initialConnection.uuid
+            initialConnection.stdout.send(uuid.toString().encodeToByteArray())
+            val socketTask = async {
+                withTimeoutOrNull(CONNECT_TIMEOUT) {
+                    sockets.first { it.first == uuid }
+                }?.second
             }
-        } finally {
-            connections.remove(id)!!
+            val controlCListener = launch {
+                while (true) {
+                    val byte = initialConnection.stdin.receiveCatching().getOrNull()
+                    if (byte == null) {
+                        logger.info("Session $uuid closed while waiting for host")
+                        break
+                    }
+                    if (byte.toInt() == 0x03) {
+                        logger.info("Received Ctrl-C from session $uuid while waiting for host")
+                        initialConnection.close()
+                        break
+                    }
+                }
+                socketTask.cancelAndJoin()
+            }
+            val socket = socketTask.await()
+            controlCListener.cancelAndJoin()
+            if (socket == null) {
+                logger.info("Session $uuid timed out waiting for host")
+                initialConnection.close("Timed out waiting for host")
+                return@coroutineScope
+            }
+            val channel = Channel<SshConnection>(Channel.UNLIMITED).also { it.send(initialConnection) }
+            activeConnections[uuid] = channel
+            try {
+                socket.runWebsocketConnection(uuid, channel).consumeEach { packet ->
+                    socket.send(packet.serialize().toByteArray())
+                }
+            } finally {
+                activeConnections.remove(uuid)!!
+            }
         }
     }
 

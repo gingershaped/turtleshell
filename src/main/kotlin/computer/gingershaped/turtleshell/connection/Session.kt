@@ -30,10 +30,11 @@ import java.nio.charset.Charset
 import java.nio.charset.CoderResult
 import java.nio.ByteBuffer
 import java.nio.CharBuffer
+import java.util.UUID
 import io.ktor.util.logging.KtorSimpleLogger
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-suspend fun CoroutineScope.runSession(username: String, id: UInt, ssh: SshConnection, incoming: Flow<ReceivedPacket>, outgoing: SendChannel<SentPacket>): Nothing {
+suspend fun CoroutineScope.runSession(username: UUID, id: UInt, ssh: SshConnection, incoming: Flow<ReceivedPacket>, outgoing: SendChannel<SentPacket>): Nothing {
     val logger = KtorSimpleLogger("Relay[$id @ $username]")
     val term = AnsiTerminal(ssh.size.value.width, ssh.size.value.height, Ansi.Level.ANSI256) // TODO
 
@@ -61,14 +62,7 @@ suspend fun CoroutineScope.runSession(username: String, id: UInt, ssh: SshConnec
             }
         }
         suspend fun closeSsh(reason: String) {
-            ssh.stdout.send(
-                Ansi.setModes(Ansi.Mode.ALTERNATE_BUFFER, Ansi.Mode.ALTERNATE_SCROLL, Ansi.Mode.MOUSE_TRACKING, Ansi.Mode.SGR_COORDS, enabled=false)
-                + Ansi.setModes(Ansi.Mode.CURSOR_VISIBLE, enabled=true)
-                + "\n"
-                + Ansi.CSI + "0m"
-                + "$reason\r\n"
-            )
-            ssh.stdin.cancel()
+            ssh.close(reason, true)
             this@runSession.cancel()
         }
         val builder = StringBuilder()

@@ -11,7 +11,7 @@ val buildTask = tasks.register<NpxTask>("buildClient") {
     inputs.dir(project.fileTree("src"))
     inputs.dir("node_modules")
     inputs.files("tsconfig.json")
-    outputs.dir("${project.layout.buildDirectory}/client")
+    outputs.dir("${project.buildDir}/client")
 }
 
 repositories {

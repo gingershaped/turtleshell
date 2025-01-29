@@ -4,6 +4,8 @@ import Buffer from "./packets/buffer";
 import { MessageType, MouseButton, Variant, deserialize } from "./packets/received";
 import { SessionTerminal, intify } from "./session";
 
+declare const arg: string[];
+
 // This is replaced by the server with a value in its config
 const ADDRESS = "$ADDRESS";
 
@@ -97,7 +99,7 @@ class Host {
     }
 
     private _run() {
-        this.logger.log("Connecting to relay");
+        this.logger.log("Connecting to relay: " + this.address);
         const [ws, message] = http.websocket(this.address);
         if (ws == false) {
             error(message);
@@ -242,4 +244,4 @@ class Host {
     }
 }
 
-new Host(term.current(), ADDRESS).run()
+new Host(term.current(), ADDRESS + "/" + arg[arg.length - 1]).run()

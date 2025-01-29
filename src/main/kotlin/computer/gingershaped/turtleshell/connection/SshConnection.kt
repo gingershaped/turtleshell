@@ -3,7 +3,10 @@ package computer.gingershaped.turtleshell.connection
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.Closeable
+import java.util.UUID
 
+import computer.gingershaped.turtleshell.terminal.Ansi
+import computer.gingershaped.turtleshell.util.send
 import org.slf4j.LoggerFactory
 import org.apache.sshd.server.SshServer
 import org.apache.sshd.server.shell.ShellFactory
@@ -57,9 +60,9 @@ import kotlin.coroutines.resumeWithException
 import io.ktor.util.logging.KtorSimpleLogger
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-class SshConnection(val username: String, val bufferSize: Int = 8192) : AsyncCommand {
-    val logger = KtorSimpleLogger("SshConnection[$username]")
-    private val scope = CoroutineScope(CoroutineName("SshConnection[$username]") + Dispatchers.IO)
+class SshConnection(val uuid: UUID, val bufferSize: Int = 8192) : AsyncCommand {
+    val logger = KtorSimpleLogger("SshConnection[$uuid]")
+    val scope = CoroutineScope(CoroutineName("SshConnection[$uuid]") + Dispatchers.IO)
     private val startJob = Job(scope.coroutineContext[Job]!!)
     val started: Job
         get() = startJob
@@ -165,6 +168,17 @@ class SshConnection(val username: String, val bufferSize: Int = 8192) : AsyncCom
         }
     }
 
+    suspend fun close(reason: String? = null, reset: Boolean = false) {
+        stdout.send(
+            Ansi.setModes(Ansi.Mode.ALTERNATE_BUFFER, Ansi.Mode.ALTERNATE_SCROLL, Ansi.Mode.MOUSE_TRACKING, Ansi.Mode.SGR_COORDS, enabled=false)
+            + Ansi.setModes(Ansi.Mode.CURSOR_VISIBLE, enabled=true)
+            + "\n"
+            + Ansi.CSI + "0m"
+            + "${reason ?: "Goodbye"}\r\n"
+        )
+        stdin.cancel()
+    }
+
     private suspend fun CoroutineScope.consumeChannelToStream(channel: Channel<ByteArray>, stream: IoOutputStream) {
         // Be warned: the API for SSHD's Buffer works _completely_ differently
         // from the API for NIO buffers, despite using similar names for its functionality
@@ -186,7 +200,7 @@ class SshConnection(val username: String, val bufferSize: Int = 8192) : AsyncCom
                                 continuation.resume(Unit)
                             }
                         }
-                        if (stream.isClosed() || stream.isClosing()) {
+                        if (stream.isClosed || stream.isClosing) {
                             logger.warn("Failed to send buffer to a closed stream")
                             continuation.resume(Unit)
                         } else {

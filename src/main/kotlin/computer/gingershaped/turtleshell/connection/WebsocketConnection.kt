@@ -32,6 +32,7 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CoroutineExceptionHandler
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.UUID
 
 const val MAJOR: UByte = 0xFFu
 const val MINOR: UByte = 0xFFu
@@ -61,23 +62,22 @@ internal suspend fun <T> SharedFlow<T?>.subscribe(block: suspend (T) -> Unit) =
     takeWhile { it != null }.filterNotNull().collect { block(it) }
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-fun DefaultWebSocketServerSession.runWebsocketConnection(id: String, sshConnections: ReceiveChannel<SshConnection>) = produce<SentPacket> channel@{
-    val logger = KtorSimpleLogger("WebsocketConnection[$id]")
+fun DefaultWebSocketServerSession.runWebsocketConnection(uuid: UUID, sshConnections: ReceiveChannel<SshConnection>) = produce<SentPacket> channel@{
+    val logger = KtorSimpleLogger("WebsocketConnection[$uuid]")
     logger.info("Connection opened")
 
     send(SentPacket.Hello(MAJOR, MINOR, FEATURES))
-    send(SentPacket.Message(id, SentPacket.Message.Type.AUTH))
     coroutineScope {
         val packetFlow = decodePackets().shareIn(this, SharingStarted.WhileSubscribed())
         launch {
             val sessionId = AtomicInteger()
             for (ssh in sshConnections) {
-                logger.info("Starting relay session: $id")
+                logger.info("Starting relay session")
                 ssh.started.join()
                 launch {
                     try {
                         runSession(
-                            id,
+                            uuid,
                             sessionId.getAndIncrement().toUInt(),
                             ssh,
                             packetFlow.takeWhile { it != null }.filterNotNull(),
@@ -85,7 +85,7 @@ fun DefaultWebSocketServerSession.runWebsocketConnection(id: String, sshConnecti
                         )
                     } catch (e: CancellationException) {
                         currentCoroutineContext().ensureActive()
-                        logger.info("Relay $id was canceled")
+                        logger.info("Relay $uuid was canceled")
                     } finally {
                         ssh.stdin.cancel()
                     }
