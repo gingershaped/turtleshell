@@ -29,8 +29,6 @@ sealed class ReceivedPacket {
     data class Flush(override val sessionId: UInt) : ReceivedPacket(), SessionPacket
     data class EndSession(override val sessionId: UInt) : ReceivedPacket(), SessionPacket
 
-    data class SetSecret(val secret: String) : ReceivedPacket()
-
     companion object {
         @OptIn(ExperimentalStdlibApi::class)
         fun decode(buf: ByteBuffer): ReceivedPacket = runCatching {
@@ -48,7 +46,6 @@ sealed class ReceivedPacket {
                 0x06u -> FillScreen(buf.getUInt(), buf.getUByte().toInt())
                 0x1fu -> Flush(buf.getUInt())
                 0x20u -> EndSession(buf.getUInt())
-                0x21u -> SetSecret(CHARSET.decode(buf).toString())
                 else -> error("Packet variant byte is invalid! (${variant.toHexString()})")
             }.also {
                 check(!buf.hasRemaining()) {

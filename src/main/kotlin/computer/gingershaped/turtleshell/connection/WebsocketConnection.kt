@@ -19,10 +19,10 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-const val MAJOR: UByte = 0xFFu
-const val MINOR: UByte = 0xFFu
+const val MAJOR: UByte = 0x01u
+const val MINOR: UByte = 0x00u
 /* Feature bits:
- * LSB SetSecret supported
+ * LSB unused
  *   | KeyInput supported
  *   | Unused
  *   | Unused
@@ -31,7 +31,7 @@ const val MINOR: UByte = 0xFFu
  *   | Unused
  * MSB Unused
  */
-const val FEATURES: UByte = 0b000000001u
+const val FEATURES: UByte = 0b000000000u
 
 private fun DefaultWebSocketServerSession.decodePackets() = flow {
     for (frame in incoming) {

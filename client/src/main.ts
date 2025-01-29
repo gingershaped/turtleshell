@@ -140,7 +140,6 @@ class Host {
                 switch (packet.variant) {
                     case Variant.HELLO: {
                         error("Relay said hello twice!");
-                        break;
                     }
                     case Variant.MESSAGE: {
                         this.relayLogger.log(packet.message, packet.type);

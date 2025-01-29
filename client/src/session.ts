@@ -26,7 +26,6 @@ const FILL_LINE         = 0x05;
 const FILL_SCREEN       = 0x06;
 const FLUSH             = 0x1f;
 const END_SESSION       = 0x20;
-const SET_SECRET        = 0x21;
 
 const BASE_16 = "0123456789abcdef";
 
