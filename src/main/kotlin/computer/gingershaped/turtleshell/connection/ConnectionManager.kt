@@ -21,15 +21,15 @@ val CONNECT_TIMEOUT = 10.minutes
 
 data class Challenge(val query: String, val response: Regex, val echo: Boolean = false)
 
-@OptIn(kotlin.ExperimentalUnsignedTypes::class, kotlin.ExperimentalStdlibApi::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalUnsignedTypes::class)
 class ConnectionManager(
-    val greeting: String,
-    val instructions: String,
-    val challenges: List<Challenge>,
-    val scope: CoroutineScope,
-    val sockets: SharedFlow<Pair<UUID, DefaultWebSocketServerSession>>,
+    private val greeting: String,
+    private val instructions: String,
+    private val challenges: List<Challenge>,
+    private val scope: CoroutineScope,
+    private val sockets: SharedFlow<Pair<UUID, DefaultWebSocketServerSession>>,
 ) : ShellFactory, KeyboardInteractiveAuthenticator {
-    val activeConnections = mutableMapOf<UUID, Channel<SshConnection>>()
+    private val activeConnections = mutableMapOf<UUID, Channel<SshConnection>>()
 
     override fun createShell(session: ChannelSession): Command {
         val uuid = runCatching { UUID.fromString(session.sessionContext.username) }.getOrNull()
@@ -45,7 +45,7 @@ class ConnectionManager(
         }
     }
 
-    override fun generateChallenge(session: ServerSession, username: String, lang: String, subMethods: String): InteractiveChallenge? {
+    override fun generateChallenge(session: ServerSession, username: String, lang: String, subMethods: String): InteractiveChallenge {
         logger.info("New login attempt for session $username")
         return InteractiveChallenge().apply {
             interactionName = greeting

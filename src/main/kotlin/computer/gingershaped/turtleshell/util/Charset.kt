@@ -17,7 +17,7 @@ class CCCharset internal constructor() : Charset("computercraft", arrayOf()) {
     override fun newEncoder() = Encoder(this)
     override fun newDecoder() = Decoder(this)
 
-    inner class Encoder(val charset: Charset) : CharsetEncoder(
+    inner class Encoder(charset: Charset) : CharsetEncoder(
         charset, 1F, 1F, byteArrayOf(QUESTION_MARK)
     ) {
         override fun encodeLoop(input: CharBuffer, output: ByteBuffer): CoderResult {
@@ -99,9 +99,11 @@ class CCCharset internal constructor() : Charset("computercraft", arrayOf()) {
 }
 
 class CCCharsetProvider : CharsetProvider() {
-    private val INSTANCE = CCCharset()
-
     override fun charsets() = listOf(INSTANCE).iterator()
     override fun charsetForName(name: String) =
         if (name == "computercraft") INSTANCE else null
+
+    private companion object {
+        val INSTANCE = CCCharset()
+    }
 }

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.transformWhile
 
 private suspend fun SendChannel<List<UShort>>.send(code: GLFW) = send(code.code)
 private suspend fun SendChannel<List<UShort>>.send(code: UShort) = send(listOf(code))
-@OptIn(kotlin.ExperimentalUnsignedTypes::class)
+@OptIn(ExperimentalUnsignedTypes::class)
 private suspend fun SendChannel<List<UShort>>.send(vararg codes: UShort) = send(codes.toList())
 private suspend fun SendChannel<List<UShort>>.send(vararg codes: GLFW) = send(codes.map { it.code })
 
@@ -28,12 +28,11 @@ sealed class Input {
             LEFT(0x00u), MIDDLE(0x01u), RIGHT(0x02u), SCROLL_UP(0x03u), SCROLL_DOWN(0x04u), OTHER(0x05u)
         }
     }
-    object Interrupt : Input()
+    data object Interrupt : Input()
 }
 
-@OptIn(kotlin.ExperimentalUnsignedTypes::class)
 @kotlinx.coroutines.ExperimentalCoroutinesApi
-suspend fun CoroutineScope.generateInputs(stdin: ReceiveChannel<Char>) = produce<Input> {
+fun CoroutineScope.generateInputs(stdin: ReceiveChannel<Char>) = produce {
     with(Ansi) {
         for (char in stdin) {
             when (char) {

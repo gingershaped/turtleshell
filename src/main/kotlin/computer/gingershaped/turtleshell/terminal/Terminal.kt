@@ -78,12 +78,12 @@ class ArrayTerminalBuffer(width: Int, height: Int) : TerminalBuffer {
     private var _width = width
     private var _height = height
     override var width
-        set(value: Int) {
+        set(value) {
             resize(value, _height)
         }
         get() = _width
     override var height
-        set(value: Int) {
+        set(value) {
             resize(_width, value)
         }
         get() = _height
@@ -152,8 +152,8 @@ class ArrayTerminalBuffer(width: Int, height: Int) : TerminalBuffer {
     }
 }
 
-@OptIn(kotlin.ExperimentalUnsignedTypes::class)
-class AnsiTerminal(width: Int, height: Int, val level: Ansi.Level) {
+@OptIn(ExperimentalUnsignedTypes::class)
+class AnsiTerminal(width: Int, height: Int, private val level: Ansi.Level) {
     private val palette = Palette()
     private val buffer = ArrayTerminalBuffer(width, height)
     var width by buffer::width
@@ -204,7 +204,7 @@ class AnsiTerminal(width: Int, height: Int, val level: Ansi.Level) {
                     currentBg = bg
                 }
                 append(char)
-                buffer.set(x, startY, Cell(char, fg, bg))
+                buffer[x, startY] = Cell(char, fg, bg)
                 cursorX++
             }
         }

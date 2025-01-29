@@ -5,8 +5,8 @@ import computer.gingershaped.turtleshell.terminal.Input
 import computer.gingershaped.turtleshell.util.toUByteArray
 import computer.gingershaped.turtleshell.util.ubyteFromBits
 
-@OptIn(kotlin.ExperimentalUnsignedTypes::class)
-sealed class SentPacket(val variant: UByte) {
+@OptIn(ExperimentalUnsignedTypes::class)
+sealed class SentPacket(private val variant: UByte) {
     protected abstract fun serializeBody(): UByteArray
     fun serialize() = ubyteArrayOf(variant, *serializeBody())
 

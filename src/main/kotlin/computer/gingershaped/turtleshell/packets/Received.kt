@@ -32,7 +32,7 @@ sealed class ReceivedPacket {
     data class SetSecret(val secret: String) : ReceivedPacket()
 
     companion object {
-        @OptIn(kotlin.ExperimentalStdlibApi::class)
+        @OptIn(ExperimentalStdlibApi::class)
         fun decode(buf: ByteBuffer): ReceivedPacket = runCatching {
             when(val variant = buf.getUByte().toUInt()) {
                 0x00u -> Blit(buf.getUInt(), buf.getUShort(), buf.getUShort(), ColoredString.fromBuffer(buf))

@@ -29,10 +29,9 @@ import java.util.*
 import kotlin.coroutines.resume
 import org.apache.sshd.common.channel.Channel as SshChannel
 
-@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-class SshConnection(val uuid: UUID, val bufferSize: Int = 8192) : AsyncCommand {
-    val logger = KtorSimpleLogger("SshConnection[$uuid]")
-    val scope = CoroutineScope(CoroutineName("SshConnection[$uuid]") + Dispatchers.IO)
+class SshConnection(val uuid: UUID, private val bufferSize: Int = 8192) : AsyncCommand {
+    private val logger = KtorSimpleLogger("SshConnection[$uuid]")
+    private val scope = CoroutineScope(CoroutineName("SshConnection[$uuid]") + Dispatchers.IO)
     private val startJob = Job(scope.coroutineContext[Job]!!)
     val started: Job
         get() = startJob
@@ -45,7 +44,7 @@ class SshConnection(val uuid: UUID, val bufferSize: Int = 8192) : AsyncCommand {
 
     lateinit var size: StateFlow<Size>
 
-    val stdin = callbackFlow<Byte> {
+    val stdin = callbackFlow {
         startJob.join()
         if (!stdinStream.isClosed) {
             val buffer = ByteArrayBuffer(bufferSize)
@@ -63,8 +62,8 @@ class SshConnection(val uuid: UUID, val bufferSize: Int = 8192) : AsyncCommand {
                 } else {
                     buffer.compact()
                     buffer.compactData.forEach {
-                        trySendBlocking(it).onFailure {
-                            logger.warn("Failed to send buffer", it)
+                        trySendBlocking(it).onFailure { error ->
+                            logger.warn("Failed to send buffer", error)
                         }
                     }
                     buffer.clear()
@@ -139,17 +138,19 @@ class SshConnection(val uuid: UUID, val bufferSize: Int = 8192) : AsyncCommand {
     }
 
     suspend fun close(reason: String? = null, reset: Boolean = false) {
-        stdout.send(
-            Ansi.setModes(Ansi.Mode.ALTERNATE_BUFFER, Ansi.Mode.ALTERNATE_SCROLL, Ansi.Mode.MOUSE_TRACKING, Ansi.Mode.SGR_COORDS, enabled=false)
-            + Ansi.setModes(Ansi.Mode.CURSOR_VISIBLE, enabled=true)
-            + "\n"
-            + Ansi.CSI + "0m"
-            + "${reason ?: "Goodbye"}\r\n"
-        )
+        if (reset) {
+            stdout.send(
+                Ansi.setModes(Ansi.Mode.ALTERNATE_BUFFER, Ansi.Mode.ALTERNATE_SCROLL, Ansi.Mode.MOUSE_TRACKING, Ansi.Mode.SGR_COORDS, enabled=false)
+                        + Ansi.setModes(Ansi.Mode.CURSOR_VISIBLE, enabled=true)
+                        + "\n"
+                        + Ansi.CSI + "0m"
+                        + "${reason ?: "Goodbye"}\r\n"
+            )
+        }
         stdin.cancel()
     }
 
-    private suspend fun CoroutineScope.consumeChannelToStream(channel: Channel<ByteArray>, stream: IoOutputStream) {
+    private suspend fun consumeChannelToStream(channel: Channel<ByteArray>, stream: IoOutputStream) {
         // Be warned: the API for SSHD's Buffer works _completely_ differently
         // from the API for NIO buffers, despite using similar names for its functionality
         val buffer = ByteArrayBuffer(bufferSize)
@@ -160,7 +161,7 @@ class SshConnection(val uuid: UUID, val bufferSize: Int = 8192) : AsyncCommand {
                     // Using putBytes prepends the length of the array. What the fuck, Apache?
                     buffer.putRawBytes(chunk)
                     buffer.rpos(0)
-                    suspendCancellableCoroutine<Unit> { continuation ->
+                    suspendCancellableCoroutine { continuation ->
                         fun writeListener(future: IoWriteFuture) {
                             check(future.isDone)
                             if (future.exception != null) {

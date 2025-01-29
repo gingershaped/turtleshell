@@ -31,7 +31,7 @@ const val MINOR: UByte = 0xFFu
  */
 const val FEATURES: UByte = 0b000000001u
 
-private suspend fun DefaultWebSocketServerSession.decodePackets() = flow {
+private fun DefaultWebSocketServerSession.decodePackets() = flow {
     for (frame in incoming) {
         if (frame !is Frame.Binary) {
             error("Recieved nonbinary frame!")
@@ -44,7 +44,7 @@ private suspend fun DefaultWebSocketServerSession.decodePackets() = flow {
 internal suspend fun <T> SharedFlow<T?>.subscribe(block: suspend (T) -> Unit) = 
     takeWhile { it != null }.filterNotNull().collect { block(it) }
 
-@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 fun DefaultWebSocketServerSession.runWebsocketConnection(uuid: UUID, sshConnections: ReceiveChannel<SshConnection>) = produce<SentPacket> channel@{
     val logger = KtorSimpleLogger("WebsocketConnection[$uuid]")
     logger.info("Connection opened")

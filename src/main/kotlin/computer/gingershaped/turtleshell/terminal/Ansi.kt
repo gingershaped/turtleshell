@@ -4,9 +4,9 @@ import com.github.ajalt.colormath.Color
 import kotlin.math.absoluteValue
 
 object Ansi {
-    val ESCAPE = '\u001b'
-    val CSI: String = ESCAPE + "["
-    val OSC: String = ESCAPE + "]"
+    const val ESCAPE = '\u001b'
+    const val CSI: String = "$ESCAPE["
+    const val OSC: String = "$ESCAPE]"
 
     enum class Direction(val code: Char, val glfw: GLFW? = null) {
         UP('A', GLFW.UP), DOWN('B', GLFW.DOWN), RIGHT('C', GLFW.RIGHT), LEFT('D', GLFW.LEFT),
@@ -39,8 +39,7 @@ object Ansi {
     fun scroll(distance: Int) = when {
         distance < 0 -> CSI + distance.absoluteValue + "T"
         distance == 0 -> ""
-        distance > 0 -> CSI + distance + "S"
-        else -> error("Math is broken")
+        else -> CSI + distance + "S"
     }
 
     fun setColor(color: Color, type: ColorType, level: Level) =

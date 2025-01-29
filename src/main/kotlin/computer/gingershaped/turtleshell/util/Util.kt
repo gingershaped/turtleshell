@@ -67,10 +67,30 @@ data class ColoredString(val content: CharArray, val colors: UByteArray) {
             val content = ByteArray(half).also { get(it, 0, half) }
             val colors = ByteArray(half).also { get(it, 0, half) }
             ColoredString(
-                CHARSET.decode(ByteBuffer.wrap(content)).array()!!,
+                CHARSET.decode(ByteBuffer.wrap(content)).array(),
                 colors.toUByteArray()
             )
         }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ColoredString
+
+        if (length != other.length) return false
+        if (!content.contentEquals(other.content)) return false
+        if (colors != other.colors) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = length
+        result = 31 * result + content.contentHashCode()
+        result = 31 * result + colors.hashCode()
+        return result
     }
 }
 
@@ -81,7 +101,7 @@ infix fun Int.setOn(other: Int) = this and other > 0
 fun ubyteFromBits(vararg bits: Boolean) =
     bits.takeLast(8).asReversed().foldIndexed(0u) { index, acc, bit -> acc + ((if (bit) 1u else 0u) shl index) }.toUByte()
 
-@OptIn(kotlin.ExperimentalStdlibApi::class)
+@OptIn(ExperimentalStdlibApi::class)
 val hexformat = HexFormat {
     bytes {
         byteSeparator = " "
