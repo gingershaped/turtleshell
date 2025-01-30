@@ -31,6 +31,7 @@ dependencies {
     implementation("com.github.ajalt.colormath:colormath:3.4.0")
     implementation("com.sksamuel.hoplite:hoplite-core:2.9.0")
     implementation("com.sksamuel.hoplite:hoplite-toml:2.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.6.0")
 
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
