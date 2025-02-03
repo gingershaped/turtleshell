@@ -4,7 +4,7 @@ val logback_version: String by project
 
 plugins {
     kotlin("jvm") version "1.9.25"
-    id("io.ktor.plugin") version "2.3.8"
+    id("io.ktor.plugin") version "3.0.3"
 }
 
 group = "computer.gingershaped.turtleshell"

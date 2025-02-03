@@ -22,6 +22,7 @@ import org.apache.sshd.server.SshServer
 import java.net.URI
 import java.time.Duration
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 data class Config(
     val http: Http,
@@ -94,8 +95,8 @@ fun main() {
             }
         }
         install(WebSockets) {
-            pingPeriod = Duration.ofSeconds(15)
-            timeout = Duration.ofSeconds(15)
+            pingPeriod = 15.seconds
+            timeout = 15.seconds
             maxFrameSize = Long.MAX_VALUE
             masking = false
         }

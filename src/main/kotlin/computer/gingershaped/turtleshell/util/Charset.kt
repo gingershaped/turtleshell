@@ -103,7 +103,7 @@ class CCCharsetProvider : CharsetProvider() {
     override fun charsetForName(name: String) =
         if (name == "computercraft") INSTANCE else null
 
-    private companion object {
+    internal companion object {
         val INSTANCE = CCCharset()
     }
 }

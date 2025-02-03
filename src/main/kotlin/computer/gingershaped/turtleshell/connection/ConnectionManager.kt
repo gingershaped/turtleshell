@@ -109,7 +109,7 @@ class ConnectionManager(
             activeConnections[uuid] = channel
             try {
                 socket.runWebsocketConnection(uuid, channel).consumeEach { packet ->
-                    socket.send(packet.serialize().toByteArray())
+                    socket.send(packet.serialize())
                 }
             } finally {
                 activeConnections.remove(uuid)!!
