@@ -53,8 +53,8 @@ data class Config(
 fun main() {
     val config = ConfigLoaderBuilder.default()
         .withExplicitSealedTypes("type")
-        .addResourceSource("/default.toml")
         .addResourceOrFileSource("config.toml")
+        .addResourceSource("/default.toml")
         .build().loadConfigOrThrow<Config>()
 
     val socketAddress = URLBuilder(config.http.addressUrl).apply {
