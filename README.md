@@ -2,7 +2,7 @@
 
 Turtleshell is a relay server which makes it possible to use [CC: Tweaked](https://tweaked.cc) computers over a SSH session from the comfort of your desktop.
 
-![A screenshot of a GNOME Terminal window, displaying the default ComputerCraft shell prompt.](https://hedgedoc.ginger.services/uploads/43932466-38d9-499c-bc74-130c5d120a89.png)
+![A screenshot of a GNOME Terminal window, displaying the default ComputerCraft shell prompt.](https://hedgedoc.ginger.services/uploads/d08ee341-d267-485b-b850-5f3325e15f1b.png)
 
 ## Supported features
 * Text coloring, formatting, and cursor control
